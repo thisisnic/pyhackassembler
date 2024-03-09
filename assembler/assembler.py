@@ -2,7 +2,6 @@ import sys
 import os
 import re
 
-
 def read_file(file_path):
     try:
         with open(file_path, 'r') as file:
@@ -82,6 +81,29 @@ def process_type_c(line):
 
     return binary_string + translate_comp(comp) + translate_dest(dest) + translate_jump(jump)
 
+def get_reference(line):
+    ref = {}
+    # remove the @
+    ref_val = line[1:]
+    # remove any R references
+    ref_val = re.sub(r"^R{1}(?=[0-9]{1,2})", "", ref_val)
+    
+    ref["symbol"] = not ref_val.isdigit()
+    ref["value"] = ref_val
+
+    return ref
+
+
+def write_to_file(processed_contents, output_file_path):
+    try:
+        with open(output_file_path, 'w') as file:
+            for instruction in processed_contents:
+                file.write(f"{instruction}\n")
+        print("Processed contents written to", output_file_path)
+    except Exception as e:
+        print("An error occurred while writing to the file:", e)
+
+       
 def translate_comp(comp):
     match comp:
         case "0":
@@ -175,26 +197,6 @@ def translate_dest(dest):
         case "AMD":
             return "111"
 
-
-def get_reference(line):
-    ref = {}
-    ref_val = line[1:]
-    ref_val = re.sub(r"^R{1}(?=[0-9]{1,2})", "", ref_val)
-    
-    ref["symbol"] = not ref_val.isdigit()
-    ref["value"] = ref_val
-
-    return ref
-
-
-def write_to_file(processed_contents, output_file_path):
-    try:
-        with open(output_file_path, 'w') as file:
-            for instruction in processed_contents:
-                file.write(f"{instruction}\n")
-        print("Processed contents written to", output_file_path)
-    except Exception as e:
-        print("An error occurred while writing to the file:", e)
 
 def main():
     if len(sys.argv) != 2:
