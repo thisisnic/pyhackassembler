@@ -20,42 +20,66 @@ def process_contents(contents):
         {"number": 4, "value": "THAT"},
         {"number": 16384, "value": "SCREEN"},{"number": 24576, "value": "KBD"}
         ]
-    symbol_ref = 16
+    var_ref = 16
 
-    for line in contents.split("\n"):
+    lines = contents.split("\n")
 
+    i = 0
+    # first pass to set up symbol table
+    for line in lines:
+        
         line = line.replace(" ", "")
-        print(line)
-        if line.startswith("//") or line == "" or line.isspace():
-            continue
-        elif line.startswith("("):
-            symb = line.replace("(", "").replace(")", "")
-            match = [x["number"] for x in symbol_table if x["value"] == symb]
-            if not match:
-                symbol_table.append({"number": symbol_ref, "value": symb})
-                symbol_ref += 1
+        
+        if is_comment(line) or is_empty(line):
+                    continue
+        elif is_symbol_location(line):
+                symb = line.replace("(", "").replace(")", "")
+                match = [x["number"] for x in symbol_table if x["value"] == symb]
+                if not match:
+                    symbol_table.append({"number": i, "value": symb})
+        else:
+            i += 1
+                    
+    # second pass to work out instructions
 
-        elif line.startswith("@"):
+    for line in lines:
+        line = line.replace(" ", "")
+        
+        if is_comment(line) or is_empty(line) or is_symbol_location(line):
+            continue
+
+        elif is_a_instruction(line):
             # work out if it's a ref or a value
             ref = get_reference(line)
-            print(ref)
             if(ref["symbol"]):
                 match = [x["number"] for x in symbol_table if x["value"] == ref["value"]]
                 if match:
                     instructions.append(int_to_bin(match[0]))
                 else:
-                    symbol_table.append({"number": symbol_ref, "value": ref["value"]})
-                    instructions.append(int_to_bin(symbol_ref))
-                    symbol_ref += 1
+                    # if it's just a variable
+                    symbol_table.append({"number": var_ref, "value": ref["value"]})
+                    instructions.append(int_to_bin(var_ref))
+                    var_ref += 1
             else:
                 instructions.append(int_to_bin(int(ref["value"])))
         else:
-            instructions.append(process_type_c(line))
-
-        print(instructions[-1])
-            
+            instructions.append(process_type_c(line))            
                             
     return instructions
+
+
+def is_comment(line):
+    return line.startswith("//")
+
+def is_empty(line):
+    return line == ""
+
+def is_symbol_location(line):
+    return line.startswith("(")
+
+def is_a_instruction(line):
+    return line.startswith("@")
+
 
 def int_to_bin(num):
     return format(num, '016b')
@@ -78,6 +102,7 @@ def process_type_c(line):
         line = line_components[0]
 
     comp = line
+
 
     return binary_string + translate_comp(comp) + translate_dest(dest) + translate_jump(jump)
 
