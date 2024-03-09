@@ -1,2 +1,3 @@
 # pyhackassembler
-A project as part of Nand2Tetris (part 1) to turn Hack assembly code into binary machine code
+
+This repo contains my implementation of the final project from Nand2Tetris (part 1), which converts Hack assembly code into binary machine code.
